@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}Merchant Dashboard & PayHere Simulator | LankaCart{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/admin.css">
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-bottom: 5rem;">
+
+  <!-- Admin Header -->
+  <div class="admin-header">
+    <div>
+      <span class="badge-sandbox" style="margin-bottom: 0.5rem; display: inline-flex;">Merchant Control Plane</span>
+      <h1 style="font-size: 2.25rem;">Store Operations & PayHere Simulator</h1>
+    </div>
+
+    <div style="display: flex; gap: 0.75rem;">
+      <button onclick="loadMetrics(); loadOrders(); showToast('Data refreshed', 'info');" class="btn btn-secondary">
+        ↻ Refresh Data
+      </button>
+      <a href="/docs" target="_blank" class="btn btn-primary">
+        Swagger Docs ↗
+      </a>
+    </div>
+  </div>
+
+  <!-- Real-time Metrics Grid -->
+  <div class="metrics-grid">
+    <div class="metric-card success">
+      <div class="metric-label">Total Revenue</div>
+      <div class="metric-val" id="metricRevenue">LKR 0.00</div>
+      <div class="metric-sub">From settled payments</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Total Orders</div>
+      <div class="metric-val" id="metricOrders">0</div>
+      <div class="metric-sub">All created orders</div>
+    </div>
+
+    <div class="metric-card warning">
+      <div class="metric-label">Paid Orders</div>
+      <div class="metric-val" id="metricPaid">0</div>
+      <div class="metric-sub">Verified via PayHere webhook</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Conversion Rate</div>
+      <div class="metric-val" id="metricConversion">0%</div>
+      <div class="metric-sub">Paid vs total orders</div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="admin-tabs">
+    <button class="tab-btn active" data-target="ordersPane">
+      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+      </svg>
+      Orders Management
+    </button>
+    <button class="tab-btn" data-target="simulatorPane">
+      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+      </svg>
+      PayHere Webhook Simulator
+    </button>
+    <button class="tab-btn" data-target="guidePane">
+      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+      </svg>
+      Ngrok & Public Webhook Guide
+    </button>
+  </div>
+
+  <!-- Orders Pane -->
+  <div class="tab-pane active" id="ordersPane">
+    <div class="table-card">
+      <div class="table-header">
+        <h3 style="font-size: 1.15rem;">Recent Store Orders</h3>
+        <span style="font-size: 0.85rem; color: var(--text-muted);">Real-time status updates</span>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Order Number</th>
+              <th>Customer</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Payment Method</th>
+              <th>Created At</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody">
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                Loading orders...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Webhook Simulator Pane -->
+  <div class="tab-pane" id="simulatorPane">
+    <div class="simulator-panel">
+      <div>
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">
+          <span>⚡</span> PayHere Webhook Testbed
+        </h3>
+        <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 1.5rem;">
+          Trigger authentic server-to-server callbacks with mathematically exact MD5 signatures without requiring an external ngrok tunnel.
+        </p>
+
+        <form id="simulatorForm">
+          <div class="sim-form-group">
+            <label for="simOrderNumber">Select Target Order *</label>
+            <select id="simOrderNumber" required>
+              <option value="">-- Loading Orders... --</option>
+            </select>
+          </div>
+
+          <div class="sim-form-group">
+            <label for="simStatusCode">PayHere Status Code *</label>
+            <select id="simStatusCode">
+              <option value="2">2 : SUCCESS (Payment approved & verified)</option>
+              <option value="0">0 : PENDING (Payment authorization pending)</option>
+              <option value="-1">-1 : CANCELED (User closed gateway / canceled)</option>
+              <option value="-2">-2 : FAILED (Card declined or invalid)</option>
+              <option value="-3">-3 : CHARGEDBACK (Chargeback disputed)</option>
+            </select>
+          </div>
+
+          <div class="sim-form-group">
+            <label for="simMethod">Payment Channel / Method</label>
+            <select id="simMethod">
+              <option value="VISA">VISA Credit/Debit</option>
+              <option value="MASTER">MasterCard</option>
+              <option value="AMEX">American Express</option>
+              <option value="EZCASH">Dialog eZ Cash</option>
+              <option value="MCASH">Mobitel mCash</option>
+            </select>
+          </div>
+
+          <div class="sim-form-group">
+            <label for="simStatusMessage">Status Message</label>
+            <input type="text" id="simStatusMessage" value="Simulated PayHere sandbox transaction">
+          </div>
+
+          <button type="submit" class="btn btn-simulate" style="width: 100%; margin-top: 1rem;">
+            Dispatch Signed PayHere Callback →
+          </button>
+        </form>
+      </div>
+
+      <!-- Simulator Output Console -->
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <h4 style="font-size: 0.95rem; color: #fff;">Webhook Audit Output</h4>
+          <span style="font-size: 0.75rem; color: var(--accent-gold); font-family: monospace;">FastAPI Live Stream</span>
+        </div>
+        <div class="code-console" id="simulatorConsole">
+// PayHere Webhook Simulator Ready.
+// Select an order and click "Dispatch Signed PayHere Callback".
+// The server will calculate:
+//   MD5(merchant_id + order_id + amount + currency + status_code + MD5(secret).upper()).upper()
+// and execute the full transaction lifecycle.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ngrok & Webhook Guide Pane -->
+  <div class="tab-pane" id="guidePane">
+    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 2rem;">
+      <h3 style="font-size: 1.35rem; margin-bottom: 1rem;">Exposing Local Server for Live PayHere Sandbox</h3>
+      <p style="color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.7;">
+        PayHere requires a publicly reachable <code>notify_url</code> to send its server callback. To test live with the official PayHere Sandbox checkout page and test cards:
+      </p>
+
+      <ol style="margin-left: 1.5rem; color: var(--text-secondary); line-height: 2; margin-bottom: 1.75rem;">
+        <li>
+          <b>Install ngrok:</b> If not installed, download from <a href="https://ngrok.com" target="_blank" style="color:var(--accent-blue);">ngrok.com</a> or run <code>choco install ngrok</code> / <code>winget install ngrok</code>.
+        </li>
+        <li>
+          <b>Start public tunnel:</b>
+          <pre style="background: #060910; padding: 10px 14px; border-radius: 6px; font-family: monospace; color: #38bdf8; margin: 6px 0;">ngrok http 8000</pre>
+        </li>
+        <li>
+          <b>Copy your HTTPS URL:</b> (e.g. <code>https://abcd-12-34-56-78.ngrok-free.app</code>).
+        </li>
+        <li>
+          <b>Update <code>.env</code> file:</b>
+          <pre style="background: #060910; padding: 10px 14px; border-radius: 6px; font-family: monospace; color: #f59e0b; margin: 6px 0;">BASE_URL=https://abcd-12-34-56-78.ngrok-free.app
+PAYHERE_MERCHANT_ID=your_merchant_id
+PAYHERE_MERCHANT_SECRET=your_merchant_secret</pre>
+        </li>
+        <li>
+          <b>Test Checkout:</b> Perform a test checkout on the storefront. PayHere will POST directly to your ngrok tunnel at <code>/api/v1/payments/payhere/notify</code>!
+        </li>
+      </ol>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/admin.js"></script>
+{% endblock %}

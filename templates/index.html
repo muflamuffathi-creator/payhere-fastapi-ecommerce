@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}LankaCart | Premium Ceylon Artisanal Products & PayHere Gateway{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container">
+    <div class="hero-badge">
+      <span>⚡</span> PayHere Sandbox Gateway & FastAPI Microservice Architecture
+    </div>
+    
+    <h1 class="hero-title">
+      Finest Ceylon Treasures, <br>
+      <span class="gradient-text">Seamless PayHere Sandbox Checkout</span>
+    </h1>
+
+    <p class="hero-subtitle">
+      Explore single-origin Ceylon spices, high-grown teas, and handcrafted goods with an end-to-end, cryptographically signed payment flow.
+    </p>
+
+    <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;">
+      <a href="#catalog" class="btn btn-primary">
+        Browse Collection ↓
+      </a>
+      <a href="/admin" class="btn btn-secondary">
+        Launch Webhook Simulator 🛠
+      </a>
+      <a href="/docs" target="_blank" class="btn btn-secondary">
+        Interactive OpenAPI Docs ↗
+      </a>
+    </div>
+
+    <div class="hero-badges-row">
+      <div class="hero-feature-item">
+        <span class="icon">🔒</span> Server-Generated MD5 Hash
+      </div>
+      <div class="hero-feature-item">
+        <span class="icon">📡</span> Public Webhook (ngrok ready)
+      </div>
+      <div class="hero-feature-item">
+        <span class="icon">⚡</span> Zero-Delay Order Tracking
+      </div>
+      <div class="hero-feature-item">
+        <span class="icon">🇱🇰</span> Full LKR Currency Handling
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Product Catalog -->
+<section id="catalog" class="container" style="padding-top: 1rem;">
+  
+  <!-- Search & Category Filters -->
+  <div class="controls-bar">
+    <div class="category-pills">
+      <button class="cat-pill active" data-cat="all">All Items</button>
+      <button class="cat-pill" data-cat="Spices">Spices</button>
+      <button class="cat-pill" data-cat="Ceylon Tea">Ceylon Tea</button>
+      <button class="cat-pill" data-cat="Artisanal Foods">Artisanal Foods</button>
+      <button class="cat-pill" data-cat="Handcrafts">Handcrafts</button>
+      <button class="cat-pill" data-cat="Wellness">Wellness</button>
+    </div>
+
+    <div class="search-box">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      </svg>
+      <input type="text" id="searchInput" placeholder="Search tea, cinnamon, honey...">
+    </div>
+  </div>
+
+  <!-- Products Grid -->
+  <div class="products-grid" id="productsGrid">
+    {% for product in products %}
+    <div class="product-card" data-category="{{ product.category }}" data-name="{{ product.name }}">
+      <div class="card-media">
+        <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
+        {% if product.badge %}
+          <div class="card-badge">{{ product.badge }}</div>
+        {% endif %}
+      </div>
+
+      <div class="card-body">
+        <div class="card-category">{{ product.category }}</div>
+        <h3 class="card-title">{{ product.name }}</h3>
+        <p class="card-desc">{{ product.description }}</p>
+
+        <div class="card-footer">
+          <div class="price-box">
+            <span class="currency-label">Price (LKR)</span>
+            <span class="price-amount">{{ "{:,.2f}".format(product.price) }}</span>
+          </div>
+
+          <button 
+            class="btn btn-primary" 
+            style="padding: 0.6rem 1rem; font-size: 0.85rem;"
+            onclick="Cart.addItem({
+              id: {{ product.id }},
+              name: '{{ product.name | replace("'", "\\'") }}',
+              price: {{ product.price }},
+              image_url: '{{ product.image_url }}'
+            }); toggleCart(true);"
+          >
+            Add to Cart +
+          </button>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+</section>
+
+<!-- Architecture Flow Section -->
+<section class="architecture-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="hero-badge" style="margin-bottom: 0.75rem;">Under the Hood</div>
+      <h2>How PayHere Sandbox Integration Works</h2>
+      <p style="color: var(--text-secondary);">
+        Industry standard, cryptographically validated payment processing flow between FastAPI and PayHere.
+      </p>
+    </div>
+
+    <div class="flow-grid">
+      <div class="flow-card">
+        <div class="flow-step-num">1</div>
+        <h3>Order Reservation</h3>
+        <p>
+          Customer submits checkout details. FastAPI validates prices against the database, reserves product stock, and generates an authoritative order number.
+        </p>
+        <span class="flow-code-pill">POST /api/v1/orders</span>
+      </div>
+
+      <div class="flow-card">
+        <div class="flow-step-num">2</div>
+        <h3>MD5 Hash Signing</h3>
+        <p>
+          The backend calculates PayHere's tamper-proof MD5 checkout hash using Merchant ID, Order ID, 2-decimal formatted amount, currency, and MD5 hashed secret.
+        </p>
+        <span class="flow-code-pill">UPPER(MD5(id + order + amount...))</span>
+      </div>
+
+      <div class="flow-card">
+        <div class="flow-step-num">3</div>
+        <h3>Sandbox Gateway</h3>
+        <p>
+          Customer is forwarded to PayHere Sandbox checkout modal or hosted page. Test credit card details can be entered with zero real-world cost.
+        </p>
+        <span class="flow-code-pill">sandbox.payhere.lk/pay/checkout</span>
+      </div>
+
+      <div class="flow-card">
+        <div class="flow-step-num">4</div>
+        <h3>Webhook Signature Check</h3>
+        <p>
+          PayHere asynchronously POSTs to <code>notify_url</code>. FastAPI validates <code>md5sig</code>, records payment audit trails, and transitions order to <b>PAID</b>.
+        </p>
+        <span class="flow-code-pill">POST /payments/payhere/notify</span>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

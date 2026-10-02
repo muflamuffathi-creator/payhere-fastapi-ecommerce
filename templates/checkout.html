@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout & PayHere Sandbox Payment | LankaCart{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.5rem 4rem;">
+
+  <!-- Header -->
+  <div style="margin-bottom: 2rem;">
+    <a href="/" style="color: var(--text-secondary); font-size: 0.9rem; display:inline-flex; align-items:center; gap:6px; margin-bottom: 0.75rem;">
+      ← Return to Store Catalog
+    </a>
+    <h1 style="font-size: 2.25rem;">Secure Checkout</h1>
+    <p style="color: var(--text-secondary); font-size: 0.95rem;">
+      Complete your details below to initiate PayHere Sandbox payment processing.
+    </p>
+  </div>
+
+  <!-- Empty Cart Notice -->
+  <div id="emptyCartNotice" style="display:none; background: var(--bg-card); border: 1px dashed var(--border-color); border-radius: var(--radius-lg); padding: 3rem; text-align: center; margin-bottom: 2rem;">
+    <h3 style="font-size: 1.3rem; margin-bottom: 0.75rem;">Your Cart is Empty</h3>
+    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Please select at least one item from the catalog before checking out.</p>
+    <a href="/" class="btn btn-primary">Browse Products →</a>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 2.5rem; align-items: start;">
+    
+    <!-- Customer Info Form -->
+    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 2rem;">
+      <h2 style="font-size: 1.35rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
+        <span>👤</span> Customer & Delivery Information
+      </h2>
+
+      <form id="checkoutForm">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+          <div class="sim-form-group">
+            <label for="first_name">First Name *</label>
+            <input type="text" id="first_name" name="first_name" value="Fathima" required>
+          </div>
+          <div class="sim-form-group">
+            <label for="last_name">Last Name *</label>
+            <input type="text" id="last_name" name="last_name" value="Mufla" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+          <div class="sim-form-group">
+            <label for="email">Email Address *</label>
+            <input type="email" id="email" name="email" value="muflamuffathi@gmail.com" required>
+          </div>
+          <div class="sim-form-group">
+            <label for="phone">Phone Number *</label>
+            <input type="tel" id="phone" name="phone" value="+94771234567" required>
+          </div>
+        </div>
+
+        <div class="sim-form-group">
+          <label for="address">Street Address *</label>
+          <input type="text" id="address" name="address" value="45/2 Peradeniya Road" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+          <div class="sim-form-group">
+            <label for="city">City *</label>
+            <input type="text" id="city" name="city" value="Kandy" required>
+          </div>
+          <div class="sim-form-group">
+            <label for="postal_code">Postal Code</label>
+            <input type="text" id="postal_code" name="postal_code" value="20000">
+          </div>
+          <div class="sim-form-group">
+            <label for="country">Country *</label>
+            <input type="text" id="country" name="country" value="Sri Lanka" required>
+          </div>
+        </div>
+
+        <div class="sim-form-group">
+          <label for="notes">Order Notes (Optional)</label>
+          <input type="text" id="notes" name="notes" placeholder="Delivery instructions or gift message">
+        </div>
+
+        <!-- Submit Actions -->
+        <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 0.9rem;">
+          <button type="submit" value="payhere" id="btnSubmitPayHere" class="btn btn-payhere" style="width: 100%;">
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
+            </svg>
+            Pay with PayHere Sandbox Gateway →
+          </button>
+
+          <button type="submit" value="simulate" id="btnSubmitSimulator" class="btn btn-simulate" style="width: 100%;">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            Direct Sandbox Approval Simulator (Instant Local Test)
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Order Review Card -->
+    <div>
+      <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.75rem; margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between;">
+          <span>Order Summary</span>
+          <span class="badge-sandbox">LKR Currency</span>
+        </h2>
+
+        <div id="checkoutItemsList" style="margin-bottom: 1.25rem;">
+          <!-- Items populated by checkout.js -->
+        </div>
+
+        <div style="display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--text-secondary);">
+          <span>Subtotal</span>
+          <span id="checkoutSubtotal">LKR 0.00</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 1rem; color: var(--text-secondary);">
+          <span>Standard Islandwide Delivery</span>
+          <span style="color: var(--accent-emerald); font-weight: 600;">FREE</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: 800; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+          <span>Total Amount</span>
+          <span id="checkoutTotal" style="color: var(--accent-gold);">LKR 0.00</span>
+        </div>
+      </div>
+
+      <!-- Sandbox Helper Box -->
+      <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: var(--radius-md); padding: 1.25rem;">
+        <h4 style="font-size: 0.9rem; color: #93c5fd; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 6px;">
+          <span>💡</span> PayHere Sandbox Testing Credentials
+        </h4>
+        <p style="font-size: 0.825rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.5rem;">
+          When forwarded to <code>sandbox.payhere.lk</code>, use any test card details:
+        </p>
+        <ul style="font-size: 0.825rem; color: var(--text-secondary); margin-left: 1.25rem; line-height: 1.6;">
+          <li><b>Card Number:</b> <code style="color: #60a5fa;">4111 1111 1111 1111</code> (VISA)</li>
+          <li><b>Expiry:</b> Any future date (e.g. <code>12/28</code>)</li>
+          <li><b>CVV:</b> <code>123</code> | <b>OTP:</b> <code>123456</code></li>
+        </ul>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/checkout.js"></script>
+{% endblock %}

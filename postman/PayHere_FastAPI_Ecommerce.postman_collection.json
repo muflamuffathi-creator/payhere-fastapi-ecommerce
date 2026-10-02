@@ -1,0 +1,267 @@
+{
+  "info": {
+    "name": "LankaCart & PayHere E-Commerce API",
+    "_postman_id": "9a1b2c3d-e4f5-6789-0123-abcdef456789",
+    "description": "Comprehensive Postman collection for LankaCart FastAPI e-commerce backend with PayHere Sandbox payment gateway integration, MD5 checkout hash verification, and server webhook callbacks.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Health & Meta",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "PayHere Sandbox Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/payments/config/sandbox-info",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payments", "config", "sandbox-info"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Products",
+      "item": [
+        {
+          "name": "List All Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products?skip=0&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products"],
+              "query": [
+                { "key": "skip", "value": "0" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filter by Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products?category=Spices",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products"],
+              "query": [{ "key": "category", "value": "Spices" }]
+            }
+          }
+        },
+        {
+          "name": "Search Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products?search=cinnamon",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products"],
+              "query": [{ "key": "search", "value": "cinnamon" }]
+            }
+          }
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ceylon Peppermint Green Tea (150g)\",\n  \"category\": \"Ceylon Tea\",\n  \"description\": \"Organic green tea blended with fresh estate peppermint leaves.\",\n  \"price\": 2100.00,\n  \"stock_quantity\": 40,\n  \"badge\": \"New\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/products",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Orders & Checkout",
+      "item": [
+        {
+          "name": "Create Order (Reserves Stock & Computes Total)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.order_number) {",
+                  "    pm.environment.set('order_number', jsonData.order_number);",
+                  "    console.log('Saved order_number: ' + jsonData.order_number);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Fathima\",\n  \"last_name\": \"Mufla\",\n  \"email\": \"muflamuffathi@gmail.com\",\n  \"phone\": \"+94771234567\",\n  \"address\": \"45/2 Peradeniya Road\",\n  \"city\": \"Kandy\",\n  \"country\": \"Sri Lanka\",\n  \"postal_code\": \"20000\",\n  \"notes\": \"Handle with care\",\n  \"items\": [\n    {\n      \"product_id\": 1,\n      \"quantity\": 2\n    },\n    {\n      \"product_id\": 2,\n      \"quantity\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders"]
+            }
+          }
+        },
+        {
+          "name": "Get Order by Order Number",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/{{order_number}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders", "{{order_number}}"]
+            }
+          }
+        },
+        {
+          "name": "Get PayHere Checkout Params & MD5 Hash",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/{{order_number}}/checkout-params",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders", "{{order_number}}", "checkout-params"]
+            }
+          }
+        },
+        {
+          "name": "List Recent Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders?limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders"],
+              "query": [{ "key": "limit", "value": "10" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. PayHere Payment Webhooks & Simulation",
+      "item": [
+        {
+          "name": "Simulate Successful Payment (Status 2 -> PAID)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_number\": \"{{order_number}}\",\n  \"status_code\": 2,\n  \"method\": \"VISA\",\n  \"card_holder_name\": \"Fathima Mufla\",\n  \"status_message\": \"Approved via PayHere sandbox simulation\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payments/simulate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payments", "simulate"]
+            }
+          }
+        },
+        {
+          "name": "Simulate Failed Payment (Status -2 -> FAILED)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_number\": \"{{order_number}}\",\n  \"status_code\": -2,\n  \"method\": \"VISA\",\n  \"card_holder_name\": \"Fathima Mufla\",\n  \"status_message\": \"Card declined in sandbox\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payments/simulate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payments", "simulate"]
+            }
+          }
+        },
+        {
+          "name": "Live PayHere Webhook (notify_url endpoint)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "merchant_id", "value": "1211149" },
+                { "key": "order_id", "value": "{{order_number}}" },
+                { "key": "payment_id", "value": "320025112233" },
+                { "key": "payhere_amount", "value": "9100.00" },
+                { "key": "payhere_currency", "value": "LKR" },
+                { "key": "status_code", "value": "2" },
+                { "key": "md5sig", "value": "YOUR_CALCULATED_MD5SIG" },
+                { "key": "method", "value": "VISA" },
+                { "key": "status_message", "value": "Successfully processed" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payments/payhere/notify",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payments", "payhere", "notify"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Admin & Analytics",
+      "item": [
+        {
+          "name": "Dashboard Metrics & Revenue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/metrics",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "metrics"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

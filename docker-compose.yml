@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: lankacart-fastapi
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./ecommerce.db
+      - PAYHERE_MERCHANT_ID=${PAYHERE_MERCHANT_ID:-1211149}
+      - PAYHERE_MERCHANT_SECRET=${PAYHERE_MERCHANT_SECRET:-4TkZ76v6Ea48qW6wQ3X5F1G2}
+      - PAYHERE_MODE=sandbox
+      - BASE_URL=${BASE_URL:-http://localhost:8000}
+    volumes:
+      - .:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Optional PostgreSQL database service (uncomment to use Postgres instead of SQLite)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: lankacart-postgres
+  #   restart: always
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: password
+  #     POSTGRES_DB: lankacart
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+
+# volumes:
+#   postgres_data:

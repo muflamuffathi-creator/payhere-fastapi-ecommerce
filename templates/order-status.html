@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Order Status: {{ order_number }} | LankaCart{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 3rem 1.5rem 5rem; max-width: 900px;">
+
+  {% if not order %}
+  <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 3rem; text-align: center;">
+    <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Order Not Found</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+      We couldn't locate order number <code style="color:var(--accent-gold);">{{ order_number }}</code> in the system.
+    </p>
+    <a href="/" class="btn btn-primary">Return to Store</a>
+  </div>
+  {% else %}
+
+  <input type="hidden" id="trackingOrderNumber" value="{{ order.order_number }}">
+  <input type="hidden" id="currentStatusValue" value="{{ order.status }}">
+
+  <!-- Top Status Banner -->
+  <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 2.25rem; margin-bottom: 2rem; position: relative; overflow: hidden;">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+      <div>
+        <span style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em;">
+          Order Reference
+        </span>
+        <h1 style="font-size: 1.85rem; color: #fff;">{{ order.order_number }}</h1>
+      </div>
+
+      <div>
+        <span id="orderStatusBadge" class="status-pill status-{{ order.status }}">
+          {{ order.status }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Conditional Status Explanations -->
+    {% if order.status == 'PAID' %}
+    <div id="paidSuccessBox" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-md); padding: 1.25rem; display: flex; align-items: center; gap: 12px;">
+      <div style="font-size: 1.75rem;">🎉</div>
+      <div>
+        <h4 style="color: #34d399; font-size: 1rem; margin-bottom: 2px;">Payment Successfully Verified</h4>
+        <p style="color: var(--text-secondary); font-size: 0.85rem;">
+          PayHere sandbox server-to-server webhook callback has been received and cryptographically verified using MD5 signature.
+        </p>
+      </div>
+    </div>
+    {% elif order.status in ['PENDING', 'PROCESSING'] %}
+    <div id="pendingNoticeBox" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: var(--radius-md); padding: 1.25rem;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1rem;">
+        <div style="font-size: 1.5rem; animation: pulse 2s infinite;">⏳</div>
+        <div>
+          <h4 style="color: #fbbf24; font-size: 1rem; margin-bottom: 2px;">Awaiting PayHere Webhook Notification</h4>
+          <p style="color: var(--text-secondary); font-size: 0.85rem;">
+            This page is automatically polling the backend. Once the PayHere server callback arrives at <code>/api/v1/payments/payhere/notify</code>, this status will update instantly.
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick simulator action buttons -->
+      <div style="background: rgba(0, 0, 0, 0.35); padding: 12px; border-radius: var(--radius-sm); border: 1px dashed var(--border-color);">
+        <div style="font-size: 0.8rem; font-weight: 700; color: #fff; margin-bottom: 8px;">
+          🛠 Local Sandbox Simulator (No ngrok needed):
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button onclick="triggerOrderSimulation(2, 'Simulated payment success')" class="btn btn-simulate" style="padding: 6px 12px; font-size: 0.8rem;">
+            ✓ Simulate PayHere Approval (Code 2)
+          </button>
+          <button onclick="triggerOrderSimulation(-2, 'Simulated payment failed')" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; color: #fb7185; border-color: rgba(244,63,94,0.3);">
+            ✗ Simulate PayHere Failure (Code -2)
+          </button>
+        </div>
+      </div>
+    </div>
+    {% elif order.status in ['FAILED', 'CANCELLED'] %}
+    <div style="background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.3); border-radius: var(--radius-md); padding: 1.25rem; display: flex; align-items: center; gap: 12px;">
+      <div style="font-size: 1.75rem;">⚠️</div>
+      <div>
+        <h4 style="color: #fb7185; font-size: 1rem; margin-bottom: 2px;">Payment Unsuccessful or Cancelled</h4>
+        <p style="color: var(--text-secondary); font-size: 0.85rem;">
+          The payment could not be completed. Product inventory has been automatically released back to stock.
+        </p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Order & Payment Details Grid -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+    
+    <!-- Customer & Shipping -->
+    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem;">
+      <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: #fff; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+        Recipient Details
+      </h3>
+      <div style="font-size: 0.9rem; line-height: 1.8;">
+        <div><b>Name:</b> {{ order.first_name }} {{ order.last_name }}</div>
+        <div><b>Email:</b> {{ order.email }}</div>
+        <div><b>Phone:</b> {{ order.phone }}</div>
+        <div><b>Address:</b> {{ order.address }}, {{ order.city }}</div>
+        <div><b>Country:</b> {{ order.country }} {% if order.postal_code %}({{ order.postal_code }}){% endif %}</div>
+      </div>
+    </div>
+
+    <!-- Payment Gateway Audit -->
+    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem;">
+      <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: #fff; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+        Gateway Audit Trail
+      </h3>
+      <div style="font-size: 0.9rem; line-height: 1.8;">
+        <div><b>Gateway:</b> PayHere Sandbox</div>
+        <div><b>Currency:</b> {{ order.currency }}</div>
+        {% if order.payments and order.payments|length > 0 %}
+          {% set p = order.payments[-1] %}
+          <div><b>Payment ID:</b> <code style="color:var(--accent-blue);">{{ p.payment_id or 'Pending' }}</code></div>
+          <div><b>Method:</b> {{ p.method or 'Card' }}</div>
+          <div><b>Signature Verified:</b> 
+            {% if p.signature_valid %}
+              <span style="color: #34d399; font-weight:700;">✓ VALID (md5sig)</span>
+            {% else %}
+              <span style="color: #fb7185; font-weight:700;">✗ INVALID</span>
+            {% endif %}
+          </div>
+          <div><b>Callback Message:</b> {{ p.status_message or 'Processed' }}</div>
+        {% else %}
+          <div style="color: var(--text-muted);">No payment callback recorded yet.</div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Items Table Receipt -->
+  <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 2.5rem;">
+    <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); font-weight: 700; font-size: 1.1rem;">
+      Purchased Items
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th style="text-align: center;">Qty</th>
+          <th style="text-align: right;">Unit Price</th>
+          <th style="text-align: right;">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in order.items %}
+        <tr>
+          <td style="font-weight: 600;">{{ item.product_name }}</td>
+          <td style="text-align: center;">{{ item.quantity }}</td>
+          <td style="text-align: right;">LKR {{ "{:,.2f}".format(item.unit_price) }}</td>
+          <td style="text-align: right; font-weight: 700; color: var(--accent-gold);">
+            LKR {{ "{:,.2f}".format(item.subtotal) }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr style="border-top: 2px solid var(--border-color); background: rgba(0,0,0,0.2);">
+          <td colspan="3" style="text-align: right; font-weight: 800; font-size: 1.1rem; padding: 14px 18px;">
+            Total Charged:
+          </td>
+          <td style="text-align: right; font-weight: 800; font-size: 1.25rem; color: var(--accent-gold); padding: 14px 18px;">
+            LKR {{ "{:,.2f}".format(order.total_amount) }}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- Action Buttons -->
+  <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+    <a href="/" class="btn btn-secondary">
+      ← Continue Shopping
+    </a>
+    <div style="display: flex; gap: 0.75rem;">
+      <a href="/admin" class="btn btn-secondary">
+        Merchant Admin & Simulator
+      </a>
+      <button onclick="window.print()" class="btn btn-primary">
+        Print Receipt 🖨
+      </button>
+    </div>
+  </div>
+
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/order-status.js"></script>
+{% endblock %}
