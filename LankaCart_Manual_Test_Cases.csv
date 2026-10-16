@@ -1,0 +1,40 @@
+Test ID,Module,Scenario,Steps,Expected Result,Actual Result,Status
+TC-AUTH-01,Storefront / Cart,Cart session persistence on page reload,"1. Open http://localhost:8000/
+2. Add 'Pure Ceylon Black Tea' to cart.
+3. Reload page (F5).",Cart maintains added items and badge count reflects active items,,Pending
+TC-CAT-02,Catalog / Search,Instant product search filtering,"1. Open http://localhost:8000/
+2. Type 'Cinnamon' into the search box.",Only matching products are displayed dynamically without page refresh,,Pending
+TC-CAT-03,Catalog / Filter,Category filter selection,"1. Open http://localhost:8000/
+2. Click category 'Spices'.",Catalog displays only items tagged under Spices category,,Pending
+TC-CART-04,Cart / Validation,Negative quantity input prevention,"1. Open product or cart drawer.
+2. Attempt to input quantity '-1' or '0'.",System rejects negative/zero quantity and resets or disables checkout,,Pending
+TC-CART-05,Cart / Validation,Empty cart checkout prevention,"1. Ensure cart is empty.
+2. Navigate directly to /checkout or click checkout button.",System displays empty cart notice and blocks submission to payment,,Pending
+TC-CART-06,Cart / Inventory,Exceeding available stock quantity,"1. Add product with stock of 10 to cart.
+2. Attempt to order quantity of 99.",System displays 'insufficient stock' validation error,,Pending
+TC-CHK-07,Checkout / Form,Mandatory customer details validation,"1. Go to /checkout with items in cart.
+2. Leave 'First Name' or 'Phone' empty and click submit.",HTML5/Pydantic validation prevents order creation and highlights missing fields,,Pending
+TC-CHK-08,Checkout / Form,Invalid email address format,"1. Enter 'invalid-email-address' into Email field.
+2. Click Pay Now.",Form displays email syntax error and blocks submission,,Pending
+TC-CHK-09,Checkout / API,Order creation with stock reservation,"1. Fill valid customer details.
+2. Submit order creation request.",Order is created with status PENDING and stock is reserved in database,,Pending
+TC-PAY-10,Payment / Hash,Server-side PayHere MD5 hash generation,"1. Initiate checkout for an order of LKR 2850.00.
+2. Inspect checkout parameters response.",Correct hash matching UPPER(MD5(merchant_id + order_id + amount + currency + UPPER(MD5(secret)))) is generated,,Pending
+TC-PAY-11,Payment / Gateway,Redirection to PayHere Sandbox modal/gateway,"1. Submit valid checkout form.
+2. Observe browser action.",Redirects seamlessly to sandbox.payhere.lk checkout window with order details populated,,Pending
+TC-PAY-12,Payment / Success,Successful payment callback processing,"1. Complete payment with status_code=2 via Sandbox or Simulator.
+2. Inspect Order tracking page.",Order status updates to PAID; payment audit trail recorded with transaction ID,,Pending
+TC-PAY-13,Payment / Failure,Failed payment transaction handling,"1. Trigger payment failure (status_code=-2).
+2. Inspect order status and catalog inventory.",Order status transitions to FAILED; reserved inventory is automatically restored,,Pending
+TC-PAY-14,Payment / Cancel,Customer cancellation handling,"1. User cancels payment on PayHere window (status_code=-1).
+2. Inspect order status and catalog.",Order status transitions to CANCELLED; reserved inventory is restored,,Pending
+TC-SEC-15,Security / Signature,Tampered webhook signature rejection,"1. Send POST /api/v1/payments/payhere/notify with forged md5sig.
+2. Inspect HTTP response code.",FastAPI rejects callback with HTTP 400 Bad Request; order status remains unchanged,,Pending
+TC-SEC-16,Security / Amount,Tampered payment amount callback,"1. Send webhook callback with status_code=2 but modified amount (e.g. 10.00 instead of 2850.00).",System detects signature mismatch due to altered amount and rejects webhook with 400,,Pending
+TC-SEC-17,Concurrency / Edge,Rapid double-click on Pay button,"1. Click 'Pay with PayHere' button twice rapidly.",Frontend disables button on first click or backend prevents duplicate order creation,,Pending
+TC-ORD-18,Order Tracking,Live order polling and status refresh,"1. Navigate to /orders/track/{order_number}.
+2. Change order status via Webhook simulator.",Tracking page updates status badge without requiring full manual page reload,,Pending
+TC-ORD-19,Order / Invoice,Invoice calculation and receipt generation,"1. Open paid order tracking page.
+2. Verify subtotal, shipping, and total.",All line items match unit prices and total matches paid transaction amount,,Pending
+TC-ADM-20,Admin / Simulator,Built-in Webhook Simulator execution,"1. Navigate to /admin.
+2. Select pending order and simulate Success (status 2).",Simulator returns 200 OK, marks signature valid, and updates operational metrics,,Pending
